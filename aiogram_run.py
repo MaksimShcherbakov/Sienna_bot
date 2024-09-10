@@ -1,10 +1,12 @@
+import psycopg2
 import asyncio
-from create_bot import bot, dp, scheduler
+
+from create_bot import bot, dp
 from handlers.start import start_router, questionnaire_router
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
 
-# from work_time.time_func import send_time_msg
+from constants import DATABASE_URL
 
 async def set_commands():
     commands = [BotCommand(command='start', description='Старт'),

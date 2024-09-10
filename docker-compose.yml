@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    environment:
+      - REDIS_PASSWORD=${DB_PASSWORD}
+      - REDIS_USER=${DB_USER}
+      - REDIS_USER_PASSWORD=${DB_USER_PASSWORD}
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./redisdata:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: >
+      sh -c '
+        mkdir -p /usr/local/etc/redis &&
+        echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
+        echo "requirepass $DB_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
+        echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
+        echo "user $DB_USER on >$DB_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
+        redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
+      '
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+  database:
+    image: postgres:13-alpine
+    container_name: sienna_db
+    environment:
+      - POSTGRES_DB=sienna_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_USER_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pg_admin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=zazik989@yandex.ru
+      - PGADMIN_DEFAULT_PASSWORD=root
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "8888:80"
+    restart: always
+
+volumes:
+  db-data: {}
+  pgadmin-data: {}
+  redisdata: {}

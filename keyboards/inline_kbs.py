@@ -42,3 +42,18 @@ def create_qst_inline_kb(questions: dict) -> InlineKeyboardMarkup:
     )
     builder.adjust(1)
     return builder.as_markup()
+
+def check_data():
+    kb_list = [
+        [InlineKeyboardButton(text="✅Все верно", callback_data='correct')],
+        [InlineKeyboardButton(text="❌Заполнить сначала", callback_data='incorrect')]
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb_list)
+    return keyboard
+
+def get_login_tg():
+    kb_list = [
+        [InlineKeyboardButton(text='Использовать мой логин ТГ', callback_data='in_login')]
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb_list)
+    return keyboard

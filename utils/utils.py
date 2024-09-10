@@ -1,7 +1,7 @@
 import aiohttp
 from faker import Faker
 from constants import GPT_TOKEN
-
+import re
 
 
 def get_random_person():
@@ -18,25 +18,23 @@ def get_random_person():
     }
     return user
 
+def extract_number(text):
+    match = re.search(r'\b(\d+)\b', text)
+    if match:
+        return int(match.group(1))
+    else:
+        return None
 
-async def create_assistance(instruction: str, name: str):
 
-    assistance_headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {GPT_TOKEN}",
-        "OpenAI-Beta": "assistants=v2"
-    }
+def extract_after_keyword(input_string, keywords):
+    if not isinstance(keywords, list):
+        raise TypeError("keywords should be a list of strings")
 
-    create_assistance_data = {
-        "instructions": instruction,
-        "name": name,
-        "tools": [{"type": "code_interpreter"}],
-        "model": "gpt-4o-mini"
-    }
+    for keyword in keywords:
+        if not isinstance(keyword, str):
+            raise TypeError("Each keyword should be a string")
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post("https://api.openai.com/v1/assistants",
-                                headers=assistance_headers,
-                                json=create_assistance_data) as response:
-            return await response.json()
+        input_string = input_string.replace(keyword, "").strip()
+
+    return input_string
 

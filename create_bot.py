@@ -1,18 +1,17 @@
 import logging
 import os
-from aiogram import Bot, Dispatcher
+import asyncio
+
+from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
 from decouple import config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from constants import BOT_TOKEN
-from aiogram.fsm.storage.redis import RedisStorage
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
+from constants import BOT_TOKEN, DATABASE_URL
 
-# from db_handler.db_class import PostgresHandler
-#
-# pg_db = PostgresHandler(config('PG_LINK'))
 
 questions = {
     1: {'qst': 'Столица Италии?', 'answer': 'Рим'},
@@ -27,10 +26,9 @@ questions = {
     10: {'qst': 'Какой океан самый большой?', 'answer': 'Тихий океан'},
 }
 
+engine = create_engine(DATABASE_URL)
 
-redis_url = config('REDIS_URL')
-storage = RedisStorage.from_url(config('REDIS_URL'))
-dp = Dispatcher(storage=storage)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'all_media')
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
@@ -40,3 +38,5 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+dp = Dispatcher()
