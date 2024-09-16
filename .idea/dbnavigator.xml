@@ -6,17 +6,17 @@
   </component>
   <component name="DBNavigator.Project.DataEditorManager">
     <record-view-column-sorting-type value="BY_INDEX" />
-    <value-preview-text-wrapping value="true" />
+    <value-preview-text-wrapping value="false" />
     <value-preview-pinned value="false" />
   </component>
   <component name="DBNavigator.Project.DatabaseBrowserManager">
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
-    <show-object-properties value="true" />
+    <show-object-properties value="false" />
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="11ccf421-3020-40ff-ad47-016432105ddd">
+    <connection id="1ecd21f5-30c9-4126-a8a5-49f38b464281">
       <console name="sienna_db" type="STANDARD" schema="" session="Main" />
     </connection>
   </component>
@@ -25,6 +25,12 @@
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
     <open-files />
+  </component>
+  <component name="DBNavigator.Project.DatabaseSessionManager">
+    <connection id="1ecd21f5-30c9-4126-a8a5-49f38b464281" />
+  </component>
+  <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="1ecd21f5-30c9-4126-a8a5-49f38b464281" dataset="public.users" active-filter-id="" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
@@ -46,7 +52,7 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection id="11ccf421-3020-40ff-ad47-016432105ddd" active="true" signed="true">
+      <connection id="1ecd21f5-30c9-4126-a8a5-49f38b464281" active="true" signed="true">
         <database>
           <name value="sienna_db" />
           <description value="" />

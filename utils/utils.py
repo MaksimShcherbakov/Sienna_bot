@@ -1,7 +1,10 @@
-import aiohttp
-from faker import Faker
-from constants import GPT_TOKEN
 import re
+import random
+import string
+
+import database.requests as s_req
+
+from faker import Faker
 
 
 def get_random_person():
@@ -17,6 +20,7 @@ def get_random_person():
         'job': fake.job()
     }
     return user
+
 
 def extract_number(text):
     match = re.search(r'\b(\d+)\b', text)
@@ -38,3 +42,9 @@ def extract_after_keyword(input_string, keywords):
 
     return input_string
 
+
+async def generate_unique_ref_code():
+    while True:
+        ref_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        if not await s_req.check_code_exist(ref_code):
+            return ref_code

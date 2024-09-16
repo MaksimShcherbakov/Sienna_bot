@@ -5,13 +5,15 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.types import BotCommand, BotCommandScopeDefault
 from decouple import config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from pywin.scintilla.view import configManager
+from sqlalchemy.ext.asyncio import create_async_engine
+from aiogram.fsm.storage.redis import RedisStorage
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from constants import BOT_TOKEN, DATABASE_URL
-
 
 questions = {
     1: {'qst': 'Столица Италии?', 'answer': 'Рим'},
@@ -26,9 +28,9 @@ questions = {
     10: {'qst': 'Какой океан самый большой?', 'answer': 'Тихий океан'},
 }
 
-engine = create_engine(DATABASE_URL)
+engine = create_async_engine(DATABASE_URL, echo=True)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'all_media')
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
@@ -39,4 +41,5 @@ logger = logging.getLogger(__name__)
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
-dp = Dispatcher()
+storage = RedisStorage.from_url(config('REDIS_URL'))
+dp = Dispatcher(storage=storage)
