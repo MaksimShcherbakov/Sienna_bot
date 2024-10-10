@@ -18,7 +18,8 @@ async def set_commands():
 
 async def bot_set_commands():
     commands = [BotCommand(command='start', description='Старт'),
-                BotCommand(command='registration', description='Регистрация')]
+                BotCommand(command='registration', description='Регистрация'),
+                BotCommand(command='chat_bot', description="Настройки чат-бота")]
     await create_bot.bot.set_my_commands(commands, BotCommandScopeDefault())
 
 

@@ -7,6 +7,7 @@ import keyboards.inline_kbs as inline_kbs
 import create_bot as create_bot
 import filters.is_admin as admin
 import database.requests as req
+import constants
 
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram import Router, F
@@ -265,6 +266,11 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     await state.set_state(Form.refer_id)
 
 
+@questionnaire_router.message(F.text.lower().include('пропустить'), Form.refer_id)
+async def referer_skip(message: Message, state: FSMContext):
+    await proceed_to_check(message, state)
+
+
 @questionnaire_router.message(F.text, Form.refer_id)
 async def referer_check(message: Message, state: FSMContext):
     referral_code = message.text
@@ -353,3 +359,74 @@ async def start_profile(message: Message, state: FSMContext):
             f"<b>📝 О себе:</b> {user_info.about}\n"
         )
         await message.answer_photo(photo=user_info.photo, caption=profile_message)
+
+
+@start_router.message(Command('chat_bot'))
+async def cmd_start(message: Message):
+    async with ChatActionSender.typing(bot=create_bot.bot, chat_id=message.from_user.id):
+        user_info = await req.get_user_data(user_id=message.from_user.id)
+
+    if user_info is None:
+        await message.answer('Для начала необходимо зарегистрироваться ')
+    else:
+        await req.clear_dialog(user_id=message.from_user.id, dialog_status=False)
+        await message.answer(text='Диалог очищен. Чтобы я тебе ответила, пиши "Сиенна, ...',
+                             reply_markup=all_kbs.start_kb())
+
+
+@start_router.message(F.text.lower().contains('начать диалог'))
+async def start_speak(message: Message):
+    async with ChatActionSender.typing(bot=create_bot.bot, chat_id=message.from_user.id):
+        await req.clear_dialog(user_id=message.from_user.id, dialog_status=True)
+        user_msg_dict = {"role": "user",
+                         "content": 'Разговаривай и отвечай только на русском языке, даже если увидишь слова на других языках. Твое имя Сиенна, тебе 21 год, но при этом ты автомобиль марки Тойота модели Сиенна. Отвечай дружелюбно, можешь использовать emoji. '}
+        dialog_history = await req.add_message_to_dialog_history(user_id=message.from_user.id,
+                                                                 message=user_msg_dict,
+                                                                 return_history=True)
+
+        chat_completion = create_bot.local_client.chat.completions.create(model="llama3:8b", messages=dialog_history)
+        await message.answer(text='Диалог начат. Чтобы я тебе ответила, пиши "Сиенна, ...',
+                             reply_markup=all_kbs.stop_speak())
+
+
+@start_router.message(F.text.lower().contains('завершить диалог'))
+async def start_speak(message: Message):
+    async with ChatActionSender.typing(bot=create_bot.bot, chat_id=message.from_user.id):
+        await req.clear_dialog(user_id=message.from_user.id, dialog_status=False)
+        await message.answer(text='Диалог очищен! Начнем общаться?', reply_markup=all_kbs.start_kb())
+
+
+SIENNA_CONDITIONS = (
+        F.text.lower().contains("sienna") |
+        F.text.lower().contains("siena") |
+        F.text.lower().contains("сиенна") |
+        F.text.lower().contains("сиена")
+)
+
+
+@start_router.message(F.text.lower().contains("sienna") | F.text.lower().contains("siena") | F.text.lower().contains(
+    "сиенна") | F.text.lower().contains("сиена"))
+async def handle_message(message: Message):
+    async with ChatActionSender.typing(bot=create_bot.bot, chat_id=message.from_user.id):
+        check_open = await req.get_dialog_status(message.from_user.id)
+        if check_open is False:
+            await message.answer(text='Для того чтоб начать общение со мной, пожалуйста, нажмите на кнопку '
+                                      '"Начать диалог".', reply_markup=all_kbs.start_kb())
+            return
+    async with ChatActionSender.typing(bot=create_bot.bot, chat_id=message.from_user.id):
+        # формируем словарь с сообщением пользователя
+        user_msg_dict = {"role": "user", "content": message.text}
+        # сохраняем сообщение в базу данных и получаем историю диалога
+        dialog_history = await req.add_message_to_dialog_history(user_id=message.from_user.id,
+                                                                 message=user_msg_dict,
+                                                                 return_history=True)
+
+        chat_completion = create_bot.local_client.chat.completions.create(model="llama3:8b", messages=dialog_history)
+        message_llama = await message.answer(text=chat_completion.choices[0].message.content,
+                                             reply_markup=all_kbs.stop_speak())
+
+    assistant_msg = {"role": "assistant", "content": message_llama.text}
+
+    # сохраняем сообщение ассистента в базу данных
+    await req.add_message_to_dialog_history(user_id=message.from_user.id, message=assistant_msg,
+                                            return_history=False)

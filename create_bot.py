@@ -1,14 +1,12 @@
 import logging
 import os
-import asyncio
 
+from openai import OpenAI
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.types import BotCommand, BotCommandScopeDefault
 from decouple import config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pywin.scintilla.view import configManager
 from sqlalchemy.ext.asyncio import create_async_engine
 from aiogram.fsm.storage.redis import RedisStorage
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -34,6 +32,12 @@ async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'all_media')
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
+
+local_client = OpenAI(
+    base_url='http://localhost:11434/v1',
+    api_key='ollama',
+)
+
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

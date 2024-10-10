@@ -1,5 +1,5 @@
-from sqlalchemy import BigInteger, String, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import ARRAY
+from typing import List
+from sqlalchemy import BigInteger, String, DateTime, ForeignKey, Boolean, BIGINT
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs
 
@@ -20,7 +20,7 @@ class User(Base):
 class User_reg(Base):
     __tablename__ = 'user_reg'
 
-    user_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(BIGINT, primary_key=True)
     gender: Mapped[str] = mapped_column(String(30))
     age: Mapped[int] = mapped_column()
     full_name: Mapped[str] = mapped_column()
@@ -29,6 +29,9 @@ class User_reg(Base):
     date_reg: Mapped[str] = mapped_column(DateTime)
     about: Mapped[str] = mapped_column(String(200))
     refer_id: Mapped[int] = mapped_column()
+    in_dialog: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    chats: Mapped[List['Chat']] = relationship('Chat', back_populates='user')
 
 
 class Category(Base):
@@ -49,6 +52,16 @@ class Product(Base):
 
     category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'))
     category: Mapped["Category"] = relationship("Category", back_populates="products")
+
+
+class Chat(Base):
+    __tablename__ = 'chats'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user_reg.user_id'))
+    message: Mapped[str] = mapped_column()
+
+    user: Mapped[User_reg] = relationship('User_reg', back_populates='chats')
 
 
 async def async_main():

@@ -1,9 +1,9 @@
-import utils.utils as ut
+import json
 
 from datetime import datetime
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update, delete
 
-from database.models import Category, Product, User_reg
+from database.models import Category, Product, User_reg, Chat
 from create_bot import async_session
 
 
@@ -61,3 +61,48 @@ async def check_code_exist(refer_code) -> bool:
     async with async_session() as session:
         result = await session.scalar(select(User_reg).where(User_reg.user_id == refer_code))
     return result is not None
+
+
+async def get_dialog_history(user_id):
+    async with async_session() as session:
+        dialog_history_msg = []
+        dialog_history = await session.scalars(select(Chat.message).where(Chat.user_id == user_id))
+
+        for msg in dialog_history:
+            message = json.loads(msg)  # Преобразуем строку в словарь
+            dialog_history_msg.append(message)
+        return dialog_history_msg
+
+
+async def add_message_to_dialog_history(user_id, message, return_history=False):
+    async with async_session() as session:
+        new_chat = Chat(user_id=user_id, message=json.dumps(message))
+        session.add(new_chat)
+        await session.commit()
+        if return_history:
+            dialog_history = await get_dialog_history(user_id)
+            return dialog_history
+
+
+async def update_dialog_status(user_id, status):
+    async with async_session() as session:
+        update_status = (update(User_reg).where(User_reg.user_id == user_id).values(in_dialog=status))
+        await session.execute(update_status)
+        await session.commit()
+
+
+async def clear_dialog(user_id: int, dialog_status: bool):
+    async with async_session() as session:
+        await session.execute(
+            delete(Chat).where(Chat.user_id == user_id)
+        )
+        await update_dialog_status(user_id, dialog_status)
+        await session.commit()
+
+
+async def get_dialog_status(user_id: int):
+    async with async_session() as session:
+        stmt = select(User_reg.in_dialog).where(User_reg.user_id == user_id)
+        result = await session.execute(stmt)
+        user_data = result.scalar()
+        return user_data

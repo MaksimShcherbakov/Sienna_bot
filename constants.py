@@ -14,3 +14,5 @@ ADMIN_IDS = config('ADMINS')
 DSN = f"dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD} host={DB_HOST} port={DB_PORT}"
 
 DATABASE_URL = config('DATABASE_URL')
+
+SIENNA_NAMES_LIST = config('CALL_NAMES').split(',')

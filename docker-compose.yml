@@ -32,7 +32,7 @@ services:
         redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
       '
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -66,6 +66,10 @@ services:
     restart: always
 
 volumes:
-  db-data: {}
-  pgadmin-data: {}
-  redisdata: {}
+  db-data: { }
+  pgadmin-data: { }
+  redisdata: { }
+
+
+
+
